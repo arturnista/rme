@@ -1427,10 +1427,8 @@ void Editor::drawInternal(Position offset, bool alt, bool dodraw)
 		} else {
 			new_tile = map.allocator(map.createTileL(offset));
 		}
-		int param;
-		if(!brush->isCreature()) {
-			param = g_gui.GetBrushSize();
-		}
+		
+		int param = g_gui.GetBrushSize();
 		if(dodraw) {
 			brush->draw(&map, new_tile, &param);
 		} else {

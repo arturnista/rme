@@ -57,7 +57,7 @@ bool CreatureBrush::canDraw(BaseMap* map, const Position& position) const
 {
 	Tile* tile = map->getTile(position);
 	if(creature_type && tile && !tile->isBlocking()) {
-		if(tile->getLocation()->getSpawnCount() != 0 || g_settings.getInteger(Config::AUTO_CREATE_SPAWN)) {
+		if(tile->getLocation()->getSpawnCount() != 0 || g_settings.getInteger(Config::AUTO_CREATE_SPAWN) || g_settings.getInteger(Config::AUTO_CREATE_SPAWN_ON_FIRST_PLACEMENT)) {
  		   if(tile->isPZ()) {
 				if(creature_type->isNpc) {
 					return true;
@@ -80,18 +80,26 @@ void CreatureBrush::draw(BaseMap* map, Tile* tile, void* parameter)
 {
 	ASSERT(tile);
 	ASSERT(parameter);
-	draw_creature(map, tile);
+	int brushSize = max(1, *(int*)parameter);
+	draw_creature(map, tile, brushSize);
 }
 
-void CreatureBrush::draw_creature(BaseMap* map, Tile* tile)
+void CreatureBrush::draw_creature(BaseMap* map, Tile* tile, int brushSize)
 {
 	if (canDraw(map, tile->getPosition())) {
 		undraw(map, tile);
 		if(creature_type) {
 			if(tile->spawn == nullptr && tile->getLocation()->getSpawnCount() == 0) {
 				// manually place spawn on location
+				if (g_settings.getBoolean(Config::AUTO_CREATE_SPAWN_ON_FIRST_PLACEMENT))
+				{
+					tile->spawn = newd Spawn(brushSize);
+					return;
+				}
+
 				tile->spawn = newd Spawn(1);
 			}
+
 			tile->creature = newd Creature(creature_type);
 			tile->creature->setSpawnTime(g_gui.GetSpawnTime());
 		}

@@ -34,7 +34,7 @@ public:
 
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	void draw_creature(BaseMap* map, Tile* tile);
+	void draw_creature(BaseMap* map, Tile* tile, int brushSize);
 	virtual void undraw(BaseMap* map, Tile* tile);
 
 	CreatureType* getType() const {return creature_type;}
