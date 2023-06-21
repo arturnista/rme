@@ -24,7 +24,8 @@
 #include <typeinfo>
 #include <memory>
 
-class GamePanel : public wxPanel {
+class GamePanel : public wxPanel
+{
 public:
 	GamePanel(wxWindow* parent, int width, int height);
 	virtual ~GamePanel();
@@ -34,17 +35,20 @@ public:
 	void OnKeyUp(wxKeyEvent&);
 	void OnIdle(wxIdleEvent&);
 
-	void pause() {paused_val = true;}
-	void unpause() {paused_val = false;}
-	bool paused() const {return paused_val || dead;}
+	void pause() { paused_val = true; }
+	void unpause() { paused_val = false; }
+	bool paused() const { return paused_val || dead; }
+
 protected:
 	virtual void Render(wxDC& pdc) = 0;
 	virtual void GameLoop(int time) = 0;
 	virtual void OnKey(wxKeyEvent& event, bool down) = 0;
 
 	virtual int getFPS() const = 0;
+
 protected:
 	wxStopWatch game_timer;
+
 private:
 	bool paused_val;
 
@@ -57,7 +61,8 @@ protected:
 const int TETRIS_MAPHEIGHT = 20;
 const int TETRIS_MAPWIDTH = 10;
 
-class TetrisPanel : public GamePanel {
+class TetrisPanel : public GamePanel
+{
 public:
 	TetrisPanel(wxWindow* parent);
 	~TetrisPanel();
@@ -67,7 +72,7 @@ protected:
 	virtual void GameLoop(int time);
 	virtual void OnKey(wxKeyEvent& event, bool down);
 
-	virtual int getFPS() const {return lines / 10 + 3;}
+	virtual int getFPS() const { return lines / 10 + 3; }
 
 	enum Color {
 		NO_COLOR,
@@ -115,7 +120,8 @@ protected:
 const int SNAKE_MAPHEIGHT = 20;
 const int SNAKE_MAPWIDTH = 20;
 
-class SnakePanel : public GamePanel {
+class SnakePanel : public GamePanel
+{
 public:
 	SnakePanel(wxWindow* parent);
 	~SnakePanel();
@@ -125,7 +131,7 @@ protected:
 	virtual void GameLoop(int time);
 	virtual void OnKey(wxKeyEvent& event, bool down);
 
-	virtual int getFPS() const {return 7;}
+	virtual int getFPS() const { return 7; }
 
 	enum {
 		NORTH,
@@ -163,6 +169,17 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 {
 	wxString about;
 
+	std::string compiler;
+#if defined(__clang__)
+	compiler = fmt::format("Clang++ {}.{}.{}", __clang_major__, __clang_minor__, __clang_patchlevel__);
+#elif defined(_MSC_VER)
+	compiler = fmt::format("Microsoft Visual Studio {}", _MSC_VER);
+#elif defined(__GNUC__)
+	compiler = fmt::format("G++ {}.{}.{}", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#else
+	compiler = "unknown";
+#endif
+
 	about << "This is an OpenTibia Map Editor created by Remere.\n";
 	about << "Version " << __W_RME_VERSION__ << " for ";
 	about <<
@@ -186,7 +203,7 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	about << "under certain conditions.\n";
 	about << "\n";
 	about << "Compiled on: " << __TDATE__ << " : " << __TTIME__ << "\n";
-	about << "Compiled with: " << BOOST_COMPILER << "\n";
+	about << "Compiled with: " << compiler << "\n";
 
 	topsizer = newd wxBoxSizer(wxVERTICAL);
 
@@ -696,12 +713,12 @@ void SnakePanel::OnKey(wxKeyEvent& event, bool down)
 	if(!down) return;
 
 	int keyCode = event.GetKeyCode();
-	if (keyCode == WXK_SPACE) {
-		if (paused())
+	if(keyCode == WXK_SPACE) {
+		if(paused())
 			unpause();
 		else
 			pause();
-	} else if (!dead) {
+	} else if(!dead) {
 		switch (keyCode) {
 			case WXK_NUMPAD_UP:
 			case WXK_UP: {

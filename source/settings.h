@@ -42,6 +42,7 @@ namespace Config {
 		TRANSPARENT_FLOORS,
 		TRANSPARENT_ITEMS,
 		SHOW_INGAME_BOX,
+		SHOW_LIGHTS,
 		SHOW_GRID,
 		SHOW_EXTRA,
 		SHOW_ALL_FLOORS,
@@ -56,6 +57,8 @@ namespace Config {
 		SHOW_TOOLTIPS,
 		SHOW_PREVIEW,
 		SHOW_WALL_HOOKS,
+		SHOW_PICKUPABLES,
+		SHOW_MOVEABLES,
 		SHOW_AS_MINIMAP,
 		SHOW_ONLY_TILEFLAGS,
 		SHOW_ONLY_MODIFIED_TILES,
@@ -140,6 +143,8 @@ namespace Config {
 		MINIMAP_UPDATE_DELAY,
 		MINIMAP_VIEW_BOX,
 		MINIMAP_EXPORT_DIR,
+		ACTIONS_HISTORY_VISIBLE,
+		ACTIONS_HISTORY_LAYOUT,
 		WINDOW_HEIGHT,
 		WINDOW_WIDTH,
 		WINDOW_MAXIMIZED,
@@ -158,10 +163,12 @@ namespace Config {
 		SHOW_TOOLBAR_BRUSHES,
 		SHOW_TOOLBAR_POSITION,
 		SHOW_TOOLBAR_SIZES,
+		SHOW_TOOLBAR_INDICATORS,
 		TOOLBAR_STANDARD_LAYOUT,
 		TOOLBAR_BRUSHES_LAYOUT,
 		TOOLBAR_POSITION_LAYOUT,
 		TOOLBAR_SIZES_LAYOUT,
+		TOOLBAR_INDICATORS_LAYOUT,
 
 		LAST,
 	};
@@ -184,9 +191,10 @@ public:
 	void setString(uint32_t key, std::string newval);
 
 	wxConfigBase& getConfigObject();
-	void setDefaults() {IO(DEFAULT);}
+	void setDefaults() { IO(DEFAULT); }
 	void load();
 	void save(bool endoftheworld = false);
+
 public:
 	enum DynamicType {
 		TYPE_NONE,

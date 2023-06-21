@@ -50,16 +50,25 @@ enum NodeType {
 	ESCAPE_CHAR = 0xfd,
 };
 
-class FileHandle : boost::noncopyable
+class FileHandle
 {
 public:
 	FileHandle() : error_code(FILE_NO_ERROR), file(nullptr) {}
-	virtual ~FileHandle() {close();}
+	virtual ~FileHandle() { close(); }
+
+	bool seek(size_t offset, int origin = SEEK_SET);
+	size_t tell();
+	FORCEINLINE void skip(size_t offset) { seek(offset, SEEK_CUR); }
+
+	// Ensures we don't accidentally copy it.
+	FileHandle(const FileHandle &) = delete;
+	FileHandle &operator=(const FileHandle &) = delete;
 
 	virtual void close();
-	virtual bool isOpen() {return file != nullptr;}
-	virtual bool isOk() {return isOpen() && error_code == FILE_NO_ERROR && ferror(file) == 0;}
+	virtual bool isOpen() { return file != nullptr; }
+	virtual bool isOk() { return isOpen() && error_code == FILE_NO_ERROR && ferror(file) == 0; }
 	std::string getErrorMessage();
+
 public:
 	FileHandleError error_code;
 	FILE* file;
@@ -71,11 +80,11 @@ public:
 	explicit FileReadHandle(const std::string& name);
 	virtual ~FileReadHandle();
 
-	FORCEINLINE bool getU8(uint8_t& u8) {return getType(u8);}
-	FORCEINLINE bool getByte(uint8_t& u8) {return getType(u8);}
+	FORCEINLINE bool getU8(uint8_t& u8) { return getType(u8); }
+	FORCEINLINE bool getByte(uint8_t& u8) { return getType(u8); }
 	FORCEINLINE bool getSByte(int8_t& i8) { return getType(i8); }
-	FORCEINLINE bool getU16(uint16_t& u16) {return getType(u16);}
-	FORCEINLINE bool getU32(uint32_t& u32) {return getType(u32);}
+	FORCEINLINE bool getU16(uint16_t& u16) { return getType(u16); }
+	FORCEINLINE bool getU32(uint32_t& u32) { return getType(u32); }
 	FORCEINLINE bool get32(int32_t& i32) { return getType(i32); }
 	bool getRAW(uint8_t* ptr, size_t sz);
 	bool getRAW(std::string& str, size_t sz);
@@ -83,11 +92,8 @@ public:
 	bool getLongString(std::string& str);
 
 	virtual void close();
-	bool seek(size_t offset);
-	bool seekRelative(size_t offset);
-	FORCEINLINE void skip(size_t offset) {seekRelative(offset);}
-	size_t size() {return file_size;}
-	size_t tell() {if(file) return ftell(file); return 0;}
+	size_t size() { return file_size; }
+	
 protected:
 	size_t file_size;
 
@@ -108,11 +114,11 @@ public:
 	BinaryNode(NodeFileReadHandle* file, BinaryNode* parent);
 	~BinaryNode();
 
-	FORCEINLINE bool getU8(uint8_t& u8) {return getType(u8);}
-	FORCEINLINE bool getByte(uint8_t& u8) {return getType(u8);}
-	FORCEINLINE bool getU16(uint16_t& u16) {return getType(u16);}
-	FORCEINLINE bool getU32(uint32_t& u32) {return getType(u32);}
-	FORCEINLINE bool getU64(uint64_t& u64) {return getType(u64);}
+	FORCEINLINE bool getU8(uint8_t& u8) { return getType(u8); }
+	FORCEINLINE bool getByte(uint8_t& u8) { return getType(u8); }
+	FORCEINLINE bool getU16(uint16_t& u16) { return getType(u16); }
+	FORCEINLINE bool getU32(uint32_t& u32) { return getType(u32); }
+	FORCEINLINE bool getU64(uint64_t& u64) { return getType(u64); }
 	FORCEINLINE bool skip(size_t sz) {
 		if(read_offset + sz > data.size()) {
 			read_offset = data.size();
@@ -191,8 +197,8 @@ public:
 	virtual void close();
 	virtual BinaryNode* getRootNode();
 
-	virtual size_t size() {return file_size;}
-	virtual size_t tell() {if(file) return ftell(file); return 0;}
+	virtual size_t size() { return file_size; }
+	virtual size_t tell() {if(file) return ftell(file); return 0; }
 protected:
 	virtual bool renewCache();
 
@@ -211,9 +217,9 @@ public:
 	virtual void close();
 	virtual BinaryNode* getRootNode();
 
-	virtual size_t size() {return cache_size;}
-	virtual size_t tell() {return local_read_index;}
-	virtual bool isOk() {return true;}
+	virtual size_t size() { return cache_size; }
+	virtual size_t tell() { return local_read_index; }
+	virtual bool isOk() { return true; }
 protected:
 	virtual bool renewCache();
 
@@ -226,17 +232,18 @@ public:
 	explicit FileWriteHandle(const std::string& name);
 	virtual ~FileWriteHandle();
 
-	FORCEINLINE bool addU8(uint8_t u8) {return addType(u8);}
-	FORCEINLINE bool addByte(uint8_t u8) {return addType(u8);}
-	FORCEINLINE bool addU16(uint16_t u16) {return addType(u16);}
-	FORCEINLINE bool addU32(uint32_t u32) {return addType(u32);}
-	FORCEINLINE bool addU64(uint64_t u64) {return addType(u64);}
+	FORCEINLINE bool addU8(uint8_t u8) { return addType(u8); }
+	FORCEINLINE bool addByte(uint8_t u8) { return addType(u8); }
+	FORCEINLINE bool addU16(uint16_t u16) { return addType(u16); }
+	FORCEINLINE bool addU32(uint32_t u32) { return addType(u32); }
+	FORCEINLINE bool addU64(uint64_t u64) { return addType(u64); }
 	bool addString(const std::string& str);
 	bool addString(const char* str);
 	bool addLongString(const std::string& str);
 	bool addRAW(const std::string& str);
 	bool addRAW(const uint8_t* ptr, size_t sz);
-	bool addRAW(const char* c) {return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));}
+	bool addRAW(const char* c) { return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c)); }
+	void flush();
 
 protected:
 	template<class T>
@@ -264,7 +271,7 @@ public:
 	bool addLongString(const std::string& str);
 	bool addRAW(std::string& str);
 	bool addRAW(const uint8_t* ptr, size_t sz);
-	bool addRAW(const char* c) {return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));}
+	bool addRAW(const char* c) { return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c)); }
 
 protected:
 	virtual void renewCache() = 0;
@@ -297,17 +304,20 @@ protected:
 	}
 };
 
-class DiskNodeFileWriteHandle : public NodeFileWriteHandle {
+class DiskNodeFileWriteHandle : public NodeFileWriteHandle
+{
 public:
 	DiskNodeFileWriteHandle(const std::string& name, const std::string& identifier);
 	virtual ~DiskNodeFileWriteHandle();
 
 	virtual void close();
+
 protected:
 	virtual void renewCache();
 };
 
-class MemoryNodeFileWriteHandle : public NodeFileWriteHandle {
+class MemoryNodeFileWriteHandle : public NodeFileWriteHandle
+{
 public:
 	MemoryNodeFileWriteHandle();
 	virtual ~MemoryNodeFileWriteHandle();
@@ -317,6 +327,7 @@ public:
 
 	uint8_t* getMemory();
 	size_t getSize();
+
 protected:
 	virtual void renewCache();
 };

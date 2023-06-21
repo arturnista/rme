@@ -51,6 +51,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_ON_UPDATE_CHECK_FINISHED(wxID_ANY, MainFrame::OnUpdateReceived)
 #endif
 	EVT_ON_UPDATE_MENUS(wxID_ANY, MainFrame::OnUpdateMenus)
+	EVT_ON_UPDATE_ACTIONS(wxID_ANY, MainFrame::OnUpdateActions)
 
 	// Idle event handler
 	EVT_IDLE(MainFrame::OnIdle)
@@ -126,12 +127,12 @@ bool Application::OnInit()
 
 #ifdef _USE_PROCESS_COM
 	m_single_instance_checker = newd wxSingleInstanceChecker; //Instance checker has to stay alive throughout the applications lifetime
-	if (g_settings.getInteger(Config::ONLY_ONE_INSTANCE) && m_single_instance_checker->IsAnotherRunning()) {
+	if(g_settings.getInteger(Config::ONLY_ONE_INSTANCE) && m_single_instance_checker->IsAnotherRunning()) {
 		RMEProcessClient client;
 		wxConnectionBase* connection = client.MakeConnection("localhost", "rme_host", "rme_talk");
-		if (connection) {
+		if(connection) {
 			wxString fileName;
-			if (ParseCommandLineMap(fileName)) {
+			if(ParseCommandLineMap(fileName)) {
 				wxLogNull nolog; //We might get a timeout message if the file fails to open on the running instance. Let's not show that message.
 				connection->Execute(fileName);
 			}
@@ -178,7 +179,7 @@ bool Application::OnInit()
     wxIcon icon(rme_icon);
     g_gui.root->SetIcon(icon);
 
-    if (g_settings.getInteger(Config::WELCOME_DIALOG) == 1 && m_file_to_open == wxEmptyString) {
+    if(g_settings.getInteger(Config::WELCOME_DIALOG) == 1 && m_file_to_open == wxEmptyString) {
         g_gui.ShowWelcomeDialog(icon);
     } else {
         g_gui.root->Show();
@@ -268,7 +269,7 @@ bool Application::OnInit()
 void Application::OnEventLoopEnter(wxEventLoopBase* loop) {
 
     //First startup?
-    if (!m_startup)
+    if(!m_startup)
         return;
     m_startup = false;
 
@@ -277,17 +278,17 @@ void Application::OnEventLoopEnter(wxEventLoopBase* loop) {
         return;
 
     //Open a map.
-    if (m_file_to_open != wxEmptyString) {
+    if(m_file_to_open != wxEmptyString) {
         g_gui.LoadMap(FileName(m_file_to_open));
-    } else if (!g_gui.IsWelcomeDialogShown() && g_gui.NewMap()) { //Open a new empty map
+    } else if(!g_gui.IsWelcomeDialogShown() && g_gui.NewMap()) { //Open a new empty map
         // You generally don't want to save this map...
-        g_gui.GetCurrentEditor()->map.clearChanges();
+        g_gui.GetCurrentEditor()->clearChanges();
     }
 }
 
 void Application::MacOpenFiles(const wxArrayString& fileNames)
 {
-	if (!fileNames.IsEmpty()) {
+	if(!fileNames.IsEmpty()) {
 		g_gui.LoadMap(FileName(fileNames.Item(0)));
 	}
 }
@@ -437,6 +438,12 @@ void MainFrame::OnUpdateMenus(wxCommandEvent&)
 	g_gui.UpdateTitle();
 }
 
+void MainFrame::OnUpdateActions(wxCommandEvent&)
+{
+	tool_bar->UpdateButtons();
+	g_gui.RefreshActions();
+}
+
 #ifdef __WINDOWS__
 bool MainFrame::MSWTranslateMessage(WXMSG *msg)
 {
@@ -574,6 +581,11 @@ void MainFrame::UpdateFloorMenu()
 	menu_bar->UpdateFloorMenu();
 }
 
+void MainFrame::UpdateIndicatorsMenu()
+{
+	menu_bar->UpdateIndicatorsMenu();
+}
+
 bool MainFrame::LoadMap(FileName name)
 {
 	return g_gui.LoadMap(name);
@@ -626,4 +638,15 @@ void MainFrame::PrepareDC(wxDC& dc)
 	dc.SetAxisOrientation( 1, 0);
 	dc.SetUserScale( 1.0, 1.0 );
 	dc.SetMapMode( wxMM_TEXT );
+}
+
+// This is necessary for cmake to understand that it needs to set the executable
+int main(int argc, char** argv)
+{
+	wxEntryStart(argc, argv); // Start the wxWidgets library
+	Application* app = new Application(); // Create the application object
+	wxApp::SetInstance(app); // Informs wxWidgets that app is the application object
+	wxEntry(); // Call the wxEntry() function to start the application execution
+	wxEntryCleanup(); // Clear the wxWidgets library
+	return 0;
 }

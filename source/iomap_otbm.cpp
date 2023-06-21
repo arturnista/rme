@@ -65,20 +65,19 @@ void reform(Map* map, Tile* tile, Item* item)
 
 Item* Item::Create_OTBM(const IOMap& maphandle, BinaryNode* stream)
 {
-	uint16_t _id;
-	if(!stream->getU16(_id)) {
+	uint16_t id;
+	if(!stream->getU16(id)) {
 		return nullptr;
 	}
 
-	uint8_t _count = 0;
-
-	const ItemType& iType = g_items[_id];
+	const ItemType& type = g_items.getItemType(id);
+	uint8_t count = 0;
 	if(maphandle.version.otbm == MAP_OTBM_1) {
-		if(iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
-			stream->getU8(_count);
+		if(type.stackable || type.isSplash() || type.isFluidContainer()) {
+			stream->getU8(count);
 		}
 	}
-	return Item::Create(_id, _count);
+	return Item::Create(id, count);
 }
 
 bool Item::readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* stream)
@@ -175,8 +174,8 @@ bool Item::unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node)
 void Item::serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& stream) const
 {
 	if(maphandle.version.otbm >= MAP_OTBM_2) {
-		const ItemType& iType = g_items[id];
-		if(iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		const ItemType& type = g_items.getItemType(id);
+		if(type.stackable || type.isSplash() || type.isFluidContainer()) {
 			stream.addU8(OTBM_ATTR_COUNT);
 			stream.addU8(getSubtype());
 		}
@@ -237,8 +236,8 @@ bool Item::serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f
 	file.addNode(OTBM_ITEM);
 	file.addU16(id);
 	if(maphandle.version.otbm == MAP_OTBM_1) {
-		const ItemType& iType = g_items[id];
-		if(iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		const ItemType& type = g_items.getItemType(id);
+		if(type.stackable || type.isSplash() || type.isFluidContainer()) {
 			file.addU8(getSubtype());
 		}
 	}
@@ -370,8 +369,8 @@ bool Container::serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHand
 	file.addU16(id);
 	if(maphandle.version.otbm == MAP_OTBM_1) {
 		// In the ludicrous event that an item is a container AND stackable, we have to do this. :p
-		const ItemType& iType = g_items[id];
-		if(iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		const ItemType& type = g_items.getItemType(id);
+		if(type.stackable || type.isSplash() || type.isFluidContainer()) {
 			file.addU8(getSubtype());
 		}
 	}
@@ -408,7 +407,7 @@ bool Container::serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHand
 
 bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver)
 {
-#ifdef OTGZ_SUPPORT
+#if OTGZ_SUPPORT > 0
 	if(filename.GetExt() == "otgz") {
 		// Open the archive
 		std::shared_ptr<struct archive> a(archive_read_new(), archive_read_free);
@@ -483,7 +482,7 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f,  MapVersion& out_ver)
 
 bool IOMapOTBM::loadMap(Map& map, const FileName& filename)
 {
-#ifdef OTGZ_SUPPORT
+#if OTGZ_SUPPORT > 0
 	if(filename.GetExt() == "otgz") {
 		// Open the archive
 		std::shared_ptr<struct archive> a(archive_read_new(), archive_read_free);
@@ -1145,7 +1144,7 @@ bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc)
 
 bool IOMapOTBM::saveMap(Map& map, const FileName& identifier)
 {
-#ifdef OTGZ_SUPPORT
+#if OTGZ_SUPPORT > 0
 	if(identifier.GetExt() == "otgz") {
 		// Create the archive
 		struct archive* a = archive_write_new();
@@ -1456,7 +1455,7 @@ bool IOMapOTBM::saveSpawns(Map& map, pugi::xml_document& doc)
 	pugi::xml_node spawnNodes = doc.append_child("spawns");
 	for(const auto& spawnPosition : map.spawns) {
 		Tile *tile = map.getTile(spawnPosition);
-		if (tile == nullptr)
+		if(tile == nullptr)
 			continue;
 
 		Spawn* spawn = tile->spawn;

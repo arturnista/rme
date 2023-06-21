@@ -473,14 +473,14 @@ wxNotebookPage* PreferencesWindow::CreateUIPage()
 	sizer->Add(newd wxStaticText(ui_page, wxID_ANY, "Scroll speed: "), 0, wxLEFT | wxTOP, 5);
 
     auto true_scrollspeed = int(std::abs(g_settings.getFloat(Config::SCROLL_SPEED)) * 10);
-	scroll_speed_slider = newd wxSlider(ui_page, wxID_ANY, true_scrollspeed, 1, max(true_scrollspeed, 100));
+	scroll_speed_slider = newd wxSlider(ui_page, wxID_ANY, true_scrollspeed, 1, std::max(true_scrollspeed, 100));
 	scroll_speed_slider->SetToolTip("This controls how fast the map will scroll when you hold down the center mouse button and move it around.");
 	sizer->Add(scroll_speed_slider, 0, wxEXPAND, 5);
 
 	sizer->Add(newd wxStaticText(ui_page, wxID_ANY, "Zoom speed: "), 0, wxLEFT | wxTOP, 5);
 
     auto true_zoomspeed = int(g_settings.getFloat(Config::ZOOM_SPEED) * 10);
-	zoom_speed_slider = newd wxSlider(ui_page, wxID_ANY, true_zoomspeed, 1, max(true_zoomspeed, 100));
+	zoom_speed_slider = newd wxSlider(ui_page, wxID_ANY, true_zoomspeed, 1, std::max(true_zoomspeed, 100));
 	zoom_speed_slider->SetToolTip("This controls how fast you will zoom when you scroll the center mouse button.");
 	sizer->Add(zoom_speed_slider, 0, wxEXPAND, 5);
 
@@ -525,7 +525,7 @@ wxNotebookPage* PreferencesWindow::CreateClientPage()
 	client_list_sizer->AddGrowableCol(1);
 
     int version_counter = 0;
-	for (auto version : versions) {
+	for(auto version : versions) {
         if(!version->isVisible())
 			continue;
 
@@ -698,7 +698,7 @@ void PreferencesWindow::Apply()
 	// Client
 	ClientVersionList versions = ClientVersion::getAllVisible();
 	int version_counter = 0;
-	for (auto version : versions) {
+	for(auto version : versions) {
         wxString dir = version_dir_pickers[version_counter]->GetPath();
 		if(dir.Length() > 0 && dir.Last() != '/' && dir.Last() != '\\')
 			dir.Append("/");

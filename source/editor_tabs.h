@@ -26,7 +26,6 @@ class MapTabbook : public wxPanel
 {
 public:
 	MapTabbook(wxWindow* parent, wxWindowID id);
-	~MapTabbook();
 
 	// Wrapper functions
 	void AddTab(EditorTab* tab, bool select);
@@ -51,6 +50,8 @@ protected:
 	EditorTab* GetInternalTab(int idx);
 	wxAuiNotebook* notebook;
 	std::map<wxWindow*, EditorTab*> conv;
+
+	friend class MapTab;
 
 	DECLARE_EVENT_TABLE();
 };

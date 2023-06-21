@@ -120,23 +120,23 @@ void ClientVersion::loadVersions()
 	}
 
 	// Load the data directory info
+	using json = nlohmann::json;
 	try
 	{
-		json::mValue read_obj;
-		json::read_or_throw(g_settings.getString(Config::ASSETS_DATA_DIRS), read_obj);
-		json::mArray& vers_obj = read_obj.get_array();
-		for(json::mArray::iterator ver_iter = vers_obj.begin(); ver_iter != vers_obj.end(); ++ver_iter) {
-			json::mObject& ver_obj = ver_iter->get_obj();
-			ClientVersion* version = get(ver_obj["id"].get_str());
-			if(version == nullptr)
+		json read_obj = json::parse(g_settings.getString(Config::ASSETS_DATA_DIRS));
+		auto vers_obj = read_obj.get<std::vector<json>>();
+		for (const auto& ver_iter : vers_obj) {
+			const auto& ver_obj = ver_iter.get<json::object_t>();
+			auto version = get(ver_obj.at("id").get<std::string>());
+			if (version == nullptr) {
 				continue;
-			version->setClientPath(wxstr(ver_obj["path"].get_str()));
+			}
+			version->setClientPath(wxstr(ver_obj.at("path").get<std::string>()));
 		}
 	}
-	catch (std::runtime_error&)
+	catch ([[maybe_unused]]const json::exception& e)
 	{
 		// pass
-		;
 	}
 }
 
@@ -343,18 +343,24 @@ void ClientVersion::loadVersionExtensions(pugi::xml_node versionNode)
 
 void ClientVersion::saveVersions()
 {
-	json::Array vers_obj;
+	using json = nlohmann::json;
+	try {
+		json vers_obj;
 
-	for(VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		ClientVersion* version = i->second;
-		json::Object ver_obj;
-		ver_obj.push_back(json::Pair("id", version->getName()));
-		ver_obj.push_back(json::Pair("path", nstr(version->getClientPath().GetFullPath())));
-		vers_obj.push_back(ver_obj);
+		for(auto& [id, version] : client_versions) {
+			json ver_obj;
+			ver_obj["id"] = version->getName();
+			ver_obj["path"] = version->getClientPath().GetFullPath().ToStdString();
+			vers_obj.push_back(ver_obj);
+		}
+
+		std::ostringstream out;
+		out << vers_obj;
+		g_settings.setString(Config::ASSETS_DATA_DIRS, out.str());
 	}
-	std::ostringstream out;
-	json::write(vers_obj, out);
-	g_settings.setString(Config::ASSETS_DATA_DIRS, out.str());
+	catch ([[maybe_unused]]const json::exception& e) {
+		// pass
+	}
 }
 
 // Client version class

@@ -51,6 +51,7 @@ class MapCanvas;
 
 class SearchResultWindow;
 class MinimapWindow;
+class ActionsHistoryWindow;
 class PaletteWindow;
 class OldPropertiesWindow;
 class EditTownsDialog;
@@ -59,12 +60,20 @@ class ItemButton;
 class LiveSocket;
 
 extern const wxEventType EVT_UPDATE_MENUS;
+extern const wxEventType EVT_UPDATE_ACTIONS;
 
 #define EVT_ON_UPDATE_MENUS(id, fn) \
     DECLARE_EVENT_TABLE_ENTRY( \
         EVT_UPDATE_MENUS, id, wxID_ANY, \
-        (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent( wxCommandEventFunction, &fn ), \
-        (wxObject *) nullptr \
+        (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent(wxCommandEventFunction, &fn), \
+        (wxObject*) nullptr \
+    ),
+
+#define EVT_ON_UPDATE_ACTIONS(id, fn) \
+    DECLARE_EVENT_TABLE_ENTRY( \
+        EVT_UPDATE_ACTIONS, id, wxID_ANY, \
+        (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent(wxCommandEventFunction, &fn), \
+        (wxObject*) nullptr \
     ),
 
 class Hotkey
@@ -76,10 +85,10 @@ public:
 	Hotkey(std::string _brushname);
 	~Hotkey();
 
-	bool IsPosition() const {return type == POSITION;}
-	bool IsBrush() const {return type == BRUSH;}
-	Position GetPosition() const {ASSERT(IsPosition()); return pos;}
-	std::string GetBrushname() const {ASSERT(IsBrush()); return brushname;}
+	bool IsPosition() const { return type == POSITION; }
+	bool IsBrush() const { return type == BRUSH; }
+	Position GetPosition() const { ASSERT(IsPosition()); return pos; }
+	std::string GetBrushname() const { ASSERT(IsBrush()); return brushname; }
 
 private:
 	enum
@@ -98,8 +107,6 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Hotkey& hotkey);
 std::istream& operator>>(std::istream& os, Hotkey& hotkey);
-
-
 
 class GUI
 {
@@ -156,7 +163,7 @@ public:
 
 	void UpdateMenubar();
 
-	bool IsRenderingEnabled() const {return disabled_counter == 0;}
+	bool IsRenderingEnabled() const { return disabled_counter == 0; }
 
 	void EnableHotkeys();
 	void DisableHotkeys();
@@ -169,13 +176,15 @@ public:
     void OnWelcomeDialogAction(wxCommandEvent &event);
 
 protected:
-	void DisableRendering() {++disabled_counter;}
-	void EnableRendering() {--disabled_counter;}
+	void DisableRendering() { ++disabled_counter; }
+	void EnableRendering() { --disabled_counter; }
 
 public:
 	void SetTitle(wxString newtitle);
 	void UpdateTitle();
 	void UpdateMenus();
+	void UpdateActions();
+	void RefreshActions();
 	void ShowToolbar(ToolBarID id, bool show);
 	void SetStatusText(wxString text);
 
@@ -186,7 +195,7 @@ public:
 	void ListDialog(const wxString& title, const wxArrayString& vec) { ListDialog(nullptr, title, vec); }
 
 	void ShowTextBox(wxWindow* parent, wxString title, wxString contents);
-	void ShowTextBox(const wxString& title, const wxString& contents) {ShowTextBox(nullptr, title, contents);}
+	void ShowTextBox(const wxString& title, const wxString& contents) { ShowTextBox(nullptr, title, contents); }
 
 	// Get the current GL context
 	// Param is required if the context is to be created.
@@ -195,6 +204,9 @@ public:
 	// Search Results
 	SearchResultWindow* ShowSearchWindow();
 	void HideSearchWindow();
+
+	ActionsHistoryWindow* ShowActionsWindow();
+	void HideActionsWindow();
 
 	// Minimap
 	void CreateMinimap();
@@ -212,8 +224,8 @@ public:
 	void SwitchMode();
 	void SetSelectionMode();
 	void SetDrawingMode();
-	bool IsSelectionMode() const {return mode == SELECTION_MODE;}
-	bool IsDrawingMode() const {return mode == DRAWING_MODE;}
+	bool IsSelectionMode() const { return mode == SELECTION_MODE; }
+	bool IsDrawingMode() const { return mode == DRAWING_MODE; }
 
 	void SetHotkey(int index, Hotkey& hotkey);
 	const Hotkey& GetHotkey(int index) const;
@@ -239,7 +251,7 @@ public:
 	int GetSpawnTime() const;
 
 	// Additional brush parameters
-	void SetSpawnTime(int time) {creature_spawntime = time;}
+	void SetSpawnTime(int time) { creature_spawntime = time; }
 	void SetBrushSize(int nz);
 	void SetBrushSizeInternal(int nz);
 	void SetBrushShape(BrushShape bs);
@@ -268,10 +280,10 @@ public:
 	const ClientVersion& GetCurrentVersion() const;
 	ClientVersionID GetCurrentVersionID() const;
 	// If any version is loaded at all
-	bool IsVersionLoaded() const {return loaded_version != CLIENT_VERSION_NONE;}
+	bool IsVersionLoaded() const { return loaded_version != CLIENT_VERSION_NONE; }
 
 	// Centers current view on position
-	void SetScreenCenterPosition(Position pos);
+	void SetScreenCenterPosition(const Position& position, bool showIndicator = true);
 	// Refresh the view canvas
 	void RefreshView();
 	// Fit all/specified current map view to map dimensions
@@ -311,7 +323,7 @@ public:
 	int GetOpenMapCount();
 	bool ShouldSave();
 	void SaveCurrentMap(FileName filename, bool showdialog); // "" means default filename
-	void SaveCurrentMap(bool showdialog = true) {SaveCurrentMap(wxString(""), showdialog);}
+	void SaveCurrentMap(bool showdialog = true) { SaveCurrentMap(wxString(""), showdialog); }
 	bool NewMap();
 	void OpenMap();
 	void SaveMap();
@@ -367,6 +379,7 @@ public:
 	MinimapWindow* minimap;
 	DCButton* gem; // The small gem in the lower-right corner
 	SearchResultWindow* search_result_window;
+	ActionsHistoryWindow* actions_history_window;
 	GraphicManager gfx;
 
 	BaseMap* secondary_map; // A buffer map

@@ -24,7 +24,7 @@
 
 #include "editor.h"
 
-LivePeer::LivePeer(LiveServer* server, boost::asio::ip::tcp::socket socket) : LiveSocket(),
+LivePeer::LivePeer(LiveServer* server, asio::ip::tcp::socket socket) : LiveSocket(),
 	readMessage(), server(server), socket(std::move(socket)), color(), id(0), clientId(0), connected(false)
 {
 	ASSERT(server != nullptr);
@@ -42,13 +42,13 @@ void LivePeer::close()
 	server->removeClient(id);
 }
 
-bool LivePeer::handleError(const boost::system::error_code& error)
+bool LivePeer::handleError(const std::error_code& error)
 {
-	if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset) {
+	if(error == asio::error::eof || error == asio::error::connection_reset) {
 		logMessage(wxString() + getHostName() + ": disconnected.");
 		close();
 		return true;
-	} else if(error == boost::asio::error::connection_aborted) {
+	} else if(error == asio::error::connection_aborted) {
 		logMessage(name + " have left the server.");
 		return true;
 	}
@@ -63,9 +63,9 @@ std::string LivePeer::getHostName() const
 void LivePeer::receiveHeader()
 {
 	readMessage.position = 0;
-	boost::asio::async_read(socket,
-		boost::asio::buffer(readMessage.buffer, 4),
-		[this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	asio::async_read(socket,
+		asio::buffer(readMessage.buffer, 4),
+		[this](const std::error_code& error, size_t bytesReceived) -> void {
 			if(error) {
 				if(!handleError(error)) {
 					logMessage(wxString() + getHostName() + ": " + error.message());
@@ -82,9 +82,9 @@ void LivePeer::receiveHeader()
 void LivePeer::receive(uint32_t packetSize)
 {
 	readMessage.buffer.resize(readMessage.position + packetSize);
-	boost::asio::async_read(socket,
-		boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize),
-		[this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	asio::async_read(socket,
+		asio::buffer(&readMessage.buffer[readMessage.position], packetSize),
+		[this](const std::error_code& error, size_t bytesReceived) -> void {
 			if(error) {
 				if(!handleError(error)) {
 					logMessage(wxString() + getHostName() + ": " + error.message());
@@ -108,9 +108,9 @@ void LivePeer::receive(uint32_t packetSize)
 void LivePeer::send(NetworkMessage& message)
 {
 	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(socket,
-		boost::asio::buffer(message.buffer, message.size + 4),
-		[this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+	asio::async_write(socket,
+		asio::buffer(message.buffer, message.size + 4),
+		[this](const std::error_code& error, size_t bytesTransferred) -> void {
 			if(error) {
 				logMessage(wxString() + getHostName() + ": " + error.message());
 			}
@@ -254,7 +254,7 @@ void LivePeer::parseReady(NetworkMessage& message)
 	NetworkMessage outMessage;
 	outMessage.write<uint8_t>(PACKET_HELLO_FROM_SERVER);
 
-	Map& map = server->getEditor()->map;
+	const Map& map = server->getEditor()->getMap();
 	outMessage.write<std::string>(map.getName());
 	outMessage.write<uint16_t>(map.getWidth());
 	outMessage.write<uint16_t>(map.getHeight());
@@ -264,7 +264,7 @@ void LivePeer::parseReady(NetworkMessage& message)
 
 void LivePeer::parseNodeRequest(NetworkMessage& message)
 {
-	Map& map = server->getEditor()->map;
+	Map& map = server->getEditor()->getMap();
 	for(uint32_t nodes = message.read<uint32_t>(); nodes != 0; --nodes) {
 		uint32_t ind = message.read<uint32_t>();
 
@@ -290,7 +290,7 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message)
 	BinaryNode* rootNode = mapReader.getRootNode();
 	BinaryNode* tileNode = rootNode->getChild();
 
-	NetworkedAction* action = static_cast<NetworkedAction*>(editor.actionQueue->createAction(ACTION_REMOTE));
+	NetworkedAction* action = static_cast<NetworkedAction*>(editor.createAction(ACTION_REMOTE));
 	action->owner = clientId;
 
 	if(tileNode) do {
@@ -301,7 +301,7 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message)
 	} while(tileNode->advance());
 	mapReader.close();
 
-	editor.actionQueue->addAction(action);
+	editor.addAction(action);
 
 	g_gui.RefreshView();
 	g_gui.UpdateMinimap();

@@ -192,11 +192,15 @@ struct ClientData
 class ClientVersion;
 typedef std::vector<ClientVersion*> ClientVersionList;
 
-class ClientVersion : boost::noncopyable
+class ClientVersion
 {
 public:
 	ClientVersion(OtbVersion otb, std::string versionName, wxString path);
 	~ClientVersion() = default;
+
+	// Ensures we don't accidentally copy it.
+	ClientVersion(const ClientVersion &) = delete;
+	ClientVersion &operator=(const ClientVersion &) = delete;
 
 	static void loadVersions();
 	static void unloadVersions();
@@ -211,7 +215,7 @@ public:
 	static ClientVersionList getAllVersionsSupportedForClientVersion(ClientVersion* v);
 	static ClientVersion* getLatestVersion();
 
-	bool operator==(const ClientVersion& o) const {return otb.id == o.otb.id;}
+	bool operator==(const ClientVersion& o) const { return otb.id == o.otb.id; }
 
 	bool hasValidPaths();
 	bool loadValidPaths();

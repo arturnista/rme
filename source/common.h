@@ -28,7 +28,7 @@
 #include "mt_rand.h"
 
 //
-inline bool testFlags(size_t flags, size_t test) {
+inline bool testFlags(size_t flags, size_t test) noexcept {
 	return (flags & test) != 0;
 }
 
@@ -44,10 +44,10 @@ wxString i2ws(int i);
 wxString f2ws(double i);
 int ws2i(wxString s);
 double ws2f(wxString s);
-double frand();
 
 // replaces all instances of sought in str with replacement
 void replaceString(std::string& str, const std::string sought, const std::string replacement);
+void trim(std::string& str);
 // Removes all characters in t from source (from either start or beginning of the string)
 void trim_right(std::string& source, const std::string& t);
 void trim_left(std::string& source, const std::string& t);
@@ -72,40 +72,12 @@ std::string wstring2string(const std::wstring& widestring);
 
 // Gets position values from ClipBoard
 bool posFromClipboard(int& x, int& y, int& z);
+bool posToClipboard(int x, int y, int z, int format);
+bool posToClipboard(int fromx, int fromy, int fromz, int tox, int toy, int toz);
 
 // Returns 'yes' if the defined value is true or 'no' if it is false.
 wxString b2yn(bool v);
 
-// Standard math functions
-template <class T>
-inline T abs(T t) {
-	return (t < 0? -t : t);
-}
-
-template <class T, class U>
-inline T min(T t, U u) {
-	return (t < u? t : u);
-}
-
-template <class T, class U>
-T max(T t, U u) {
-	return (t > u? t : u);
-}
-
-template <class T, class U, class V>
-inline T min(T t, U u, V v) {
-	int min = t;
-	if ( u < min ) min = u;
-	if ( v < min ) min = v;
-	return min;
-}
-
-template <class T, class U, class V>
-inline T max(T t, U u, V v) {
-	int max = t;
-	if ( u > max ) max = u;
-	if ( v > max ) max = v;
-	return max;
-}
+wxColor colorFromEightBit(int color);
 
 #endif
