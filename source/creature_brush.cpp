@@ -58,7 +58,7 @@ bool CreatureBrush::canDraw(BaseMap* map, const Position& position) const
 	Tile* tile = map->getTile(position);
 	if(creature_type && tile && !tile->isBlocking()) {
 		if(tile->getLocation()->getSpawnCount() != 0 || g_settings.getInteger(Config::AUTO_CREATE_SPAWN) || g_settings.getInteger(Config::AUTO_CREATE_SPAWN_ON_FIRST_PLACEMENT)) {
- 		   if(tile->isPZ()) {
+			if(tile->isPZ()) {
 				if(creature_type->isNpc) {
 					return true;
 				}
@@ -72,8 +72,13 @@ bool CreatureBrush::canDraw(BaseMap* map, const Position& position) const
 
 void CreatureBrush::undraw(BaseMap* map, Tile* tile)
 {
-	delete tile->creature;
-	tile->creature = nullptr;
+	if (tile->creature != nullptr) {
+		delete tile->creature;
+		tile->creature = nullptr;
+	} else if (tile->spawn != nullptr && g_settings.getInteger(Config::AUTO_CREATE_SPAWN_ON_FIRST_PLACEMENT)) {
+		delete tile->spawn;
+		tile->spawn = nullptr;
+	}
 }
 
 void CreatureBrush::draw(BaseMap* map, Tile* tile, void* parameter)

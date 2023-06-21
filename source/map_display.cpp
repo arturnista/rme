@@ -553,12 +553,20 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event)
 
 void MapCanvas::OnMouseLeftRelease(wxMouseEvent& event)
 {
-	OnMouseActionRelease(event);
+	if(screendragging) {
+		OnMouseCameraRelease(event);
+	} else {
+		OnMouseActionRelease(event);
+	}
 }
 
 void MapCanvas::OnMouseLeftClick(wxMouseEvent& event)
 {
-	OnMouseActionClick(event);
+	if(event.AltDown()) {
+		OnMouseCameraClick(event);
+	} else {
+		OnMouseActionClick(event);
+	}
 }
 
 void MapCanvas::OnMouseLeftDoubleClick(wxMouseEvent& event)
@@ -809,15 +817,17 @@ void MapCanvas::OnMouseActionClick(wxMouseEvent& event)
 				} else {
 					editor.draw(tilestodraw, tilestoborder, event.AltDown());
 				}
-			} else if(brush->isDoodad() || brush->isSpawn() || brush->isCreature()) {
+			} else if(brush->isDoodad()) {
 				if(event.ControlDown()) {
-					if(brush->isDoodad()) {
-						PositionVector tilestodraw;
-						getTilesToDraw(mouse_map_x, mouse_map_y, floor, &tilestodraw, nullptr);
-						editor.undraw(tilestodraw, event.AltDown());
-					} else {
-						editor.undraw(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown() || event.AltDown());
-					}
+					PositionVector tilestodraw;
+					getTilesToDraw(mouse_map_x, mouse_map_y, floor, &tilestodraw, nullptr);
+					editor.undraw(tilestodraw, event.AltDown());
+				} else {
+					editor.draw(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown() || event.AltDown());
+				}
+			} else if (brush->isSpawn() || brush->isCreature()) {
+				if(event.ControlDown()) {
+					editor.undraw(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown() || event.AltDown());
 				} else {
 					bool will_show_spawn = false;
 					if(brush->isSpawn() || brush->isCreature()) {
